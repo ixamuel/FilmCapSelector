@@ -8,7 +8,7 @@
             --border: #e2e8f0;
             --nrnd-bg: #fff1f2;
             --nrnd-text: #9f1239;
-            --sidebar-w: 300px;
+            --sidebar-w: 380px;
         }
 
         ::placeholder {
@@ -415,6 +415,22 @@
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
+        }
+
+        .tag-group-row {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tag-group-row::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .tag-group-row::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 4px;
         }
 
         .tag-btn {
@@ -1075,9 +1091,8 @@
         .compare-bar-wrap {
             position: fixed;
             bottom: 24px;
-            left: 300px;
-            /* Default sidebar width */
-            width: calc(100% - 300px);
+            left: var(--sidebar-w);
+            width: calc(100% - var(--sidebar-w));
             z-index: 1000;
             display: none;
             flex-direction: column;
@@ -1271,11 +1286,11 @@
 
             .sidebar {
                 position: fixed;
-                left: -300px;
-                /* Matching new width */
+                left: calc(-1 * var(--sidebar-w));
                 height: 100vh;
                 height: 100dvh;
-                width: 300px;
+                width: var(--sidebar-w);
+                max-width: 90%;
                 box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
             }
 
@@ -1284,16 +1299,8 @@
             }
 
             .sidebar.collapsed {
-                width: 300px;
-                /* Reset width for mobile */
-                left: -300px;
-                --sidebar-w: 0px;
-            }
-
-            .sidebar.active {
-                /* On mobile, sidebar is an overlay; doesn't offset the content */
-                --sidebar-w: 0px;
-                left: 0;
+                width: var(--sidebar-w);
+                left: calc(-1 * var(--sidebar-w));
             }
 
             .compare-bar-wrap {
@@ -1382,8 +1389,8 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0, 0, 0, 0.4);
-                backdrop-filter: blur(2px);
+                background: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(4px);
                 z-index: 999;
             }
 

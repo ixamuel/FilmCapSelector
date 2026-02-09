@@ -45,6 +45,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (sidebar) sidebar.classList.add('active');
     }
 
+    // On mobile, the sidebar starts OPEN as requested
     if (window.innerWidth <= 768) {
         const sidebar = document.getElementById('appSidebar');
         const overlay = document.getElementById('sidebarOverlay');
@@ -817,8 +818,16 @@ function setupEventListeners() {
         toggleBtn.onclick = () => {
             const sidebar = document.getElementById('appSidebar');
             const overlay = document.getElementById('sidebarOverlay');
-            if (sidebar) sidebar.classList.toggle('active');
-            if (overlay) overlay.classList.toggle('active');
+            if (sidebar) {
+                // Desktop uses 'collapsed', mobile uses 'active'
+                if (window.innerWidth > 768) {
+                    sidebar.classList.toggle('collapsed');
+                } else {
+                    const isActive = sidebar.classList.toggle('active');
+                    if (overlay) overlay.classList.toggle('active', isActive);
+                    document.body.style.overflow = isActive ? 'hidden' : '';
+                }
+            }
         };
     }
 
@@ -828,6 +837,7 @@ function setupEventListeners() {
             const sidebar = document.getElementById('appSidebar');
             if (sidebar) sidebar.classList.remove('active');
             overlay.classList.remove('active');
+            document.body.style.overflow = '';
         };
     }
 

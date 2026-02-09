@@ -17,15 +17,18 @@ let selectedTypes = new Set();
 let selectedVTypes = new Set();
 let selectedVoltages = new Set();
 let selectedTemps = new Set();
+let selectedDielectrics = new Set();
+let selectedLeads = new Set();
 
 const distributions = {
     _dia: { bins: 20, max: 100, counts: [] },
     _h: { bins: 20, max: 100, counts: [] },
     _c: { bins: 50, min: 0.001, max: 2000, isLog: true, counts: [] },
-    _ripple: { bins: 20, max: 100, counts: [] }
+    _ripple: { bins: 20, max: 100, counts: [] },
+    _w: { bins: 20, max: 100, counts: [] }
 };
 
-const globalLimits = { capMin: 0.001, capMax: 2000, diaMin: 0, diaMax: 100, heightMin: 0, heightMax: 100, rippleMin: 0, rippleMax: 100 };
+const globalLimits = { capMin: 0.001, capMax: 2000, diaMin: 0, diaMax: 100, heightMin: 0, heightMax: 100, rippleMin: 0, rippleMax: 100, widthMin: 0, widthMax: 100 };
 
 function debounceUpdate() {
     if (updateTimeout) clearTimeout(updateTimeout);
@@ -36,6 +39,11 @@ window.addEventListener('DOMContentLoaded', () => {
     initializeData();
     setupEventListeners();
     applyFilters();
+
+    if (window.innerWidth >= 768) {
+        const sidebar = document.getElementById('appSidebar');
+        if (sidebar) sidebar.classList.add('active');
+    }
 
     if (window.innerWidth <= 768) {
         const sidebar = document.getElementById('appSidebar');
@@ -137,6 +145,38 @@ function initializeData() {
         });
     }
 
+    // Initialize Dielectric Tags
+    const dielectrics = [...new Set(capacitorData.map(c => c['Dielectric Material']).filter(t => t))].sort();
+    const dTags = document.getElementById('dielectric-tags');
+    if (dTags) {
+        dTags.innerHTML = '';
+        dielectrics.forEach(t => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'tag-btn active';
+            btn.dataset.dielectric = t;
+            btn.innerHTML = `${t} <span class="count-badge">0</span>`;
+            dTags.appendChild(btn);
+            btn.onclick = () => handleTagClick(btn, 'dielectric', dTags);
+        });
+    }
+
+    // Initialize Lead Space Tags
+    const leads = [...new Set(capacitorData.map(c => c['Lead Space P1\n(mm)']).filter(t => t !== null && t !== undefined))].sort((a, b) => parseFloat(a) - parseFloat(b));
+    const lTags = document.getElementById('lead-tags');
+    if (lTags) {
+        lTags.innerHTML = '';
+        leads.forEach(t => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'tag-btn active';
+            btn.dataset.lead = String(t);
+            btn.innerHTML = `${t}mm <span class="count-badge">0</span>`;
+            lTags.appendChild(btn);
+            btn.onclick = () => handleTagClick(btn, 'lead', lTags);
+        });
+    }
+
     // Range Initialization
     const caps = capacitorData.map(c => c._c).filter(v => !isNaN(v));
     globalLimits.capMax = Math.max(...caps) || 2000;
@@ -158,6 +198,11 @@ function initializeData() {
     globalLimits.rippleMax = Math.max(...ripples) || 100;
     globalLimits.rippleMin = Math.min(...ripples) || 0;
     distributions._ripple.max = globalLimits.rippleMax;
+
+    const widths = capacitorData.map(c => c._w).filter(v => !isNaN(v));
+    globalLimits.widthMax = Math.max(...widths) || 100;
+    globalLimits.widthMin = Math.min(...widths) || 0;
+    distributions._w.max = globalLimits.widthMax;
 
     updateSliderInputs();
 }
@@ -201,6 +246,11 @@ function updateSliderInputs() {
     set('rippleMax', globalLimits.rippleMax);
     set('rippleSliderMin', globalLimits.rippleMin, globalLimits.rippleMax);
     set('rippleSliderMax', globalLimits.rippleMax, globalLimits.rippleMax);
+
+    set('widthMin', globalLimits.widthMin);
+    set('widthMax', globalLimits.widthMax);
+    set('widthSliderMin', globalLimits.widthMin, globalLimits.widthMax);
+    set('widthSliderMax', globalLimits.widthMax, globalLimits.widthMax);
 }
 
 function calculateDistributions(dataSubset) {
@@ -290,6 +340,8 @@ function getActiveFilters() {
         vtypes: getActive('vtype-tags', 'vtype'),
         voltages: getActive('voltage-tags', 'voltage'),
         temps: getActive('temp-tags', 'temp'),
+        dielectrics: getActive('dielectric-tags', 'dielectric'),
+        leads: getActive('lead-tags', 'lead'),
         capMin: parseFloat(document.getElementById('capMin').value),
         capMax: parseFloat(document.getElementById('capMax').value),
         esrMax: parseFloat(document.getElementById('esrMax').value),
@@ -300,6 +352,7 @@ function getActiveFilters() {
         diaMax: parseFloat(document.getElementById('diaMax').value) || 1000,
         heightMin: parseFloat(document.getElementById('heightMin').value) || 0,
         heightMax: parseFloat(document.getElementById('heightMax').value) || 1000,
+        widthMin: parseFloat(document.getElementById('widthMin').value) || 0,
         widthMax: parseFloat(document.getElementById('widthMax').value) || 1000,
         automotive: document.querySelector('#auto-filters .tag-btn.active').dataset.value,
         series: selectedSeries
@@ -315,6 +368,8 @@ function getPreFilteredData(skipSeries = false, skipCat = null) {
         if (skipCat !== 'vtype' && f.vtypes.size > 0 && !f.vtypes.has(cap['Voltage type'])) return false;
         if (skipCat !== 'voltage' && f.voltages.size > 0 && !f.voltages.has(String(cap._v))) return false;
         if (skipCat !== 'temp' && f.temps.size > 0 && !f.temps.has(cap['Category Temperature Range \n(°C)'])) return false;
+        if (skipCat !== 'dielectric' && f.dielectrics.size > 0 && !f.dielectrics.has(cap['Dielectric Material'])) return false;
+        if (skipCat !== 'lead' && f.leads.size > 0 && !f.leads.has(String(cap['Lead Space P1\n(mm)']))) return false;
         if (!isNaN(f.capMin) && cap._c < f.capMin) return false;
         if (!isNaN(f.capMax) && cap._c > f.capMax) return false;
         if (!isNaN(f.esrMax) && cap._esr > f.esrMax) return false;
@@ -322,7 +377,7 @@ function getPreFilteredData(skipSeries = false, skipCat = null) {
         if (!isNaN(f.rippleMax) && cap._ripple > f.rippleMax) return false;
         if (cap._dia < f.diaMin || cap._dia > f.diaMax) return false;
         if (cap._h < f.heightMin || cap._h > f.heightMax) return false;
-        if (!isNaN(f.widthMax) && parseFloat(cap['Body width\n(mm)']) > f.widthMax) return false;
+        if (cap._w < f.widthMin || cap._w > f.widthMax) return false;
         if (f.automotive !== 'all' && cap['Automotive grade'] !== f.automotive) return false;
         if (!skipSeries && f.series.size > 0 && !f.series.has(cap.Series)) return false;
         return true;
@@ -366,6 +421,28 @@ function updateTagCounts() {
     tData.forEach(c => tCounts[c['Category Temperature Range \n(°C)']] = (tCounts[c['Category Temperature Range \n(°C)']] || 0) + 1);
     document.querySelectorAll('#temp-tags .tag-btn').forEach(btn => {
         const count = tCounts[btn.dataset.temp] || 0;
+        btn.querySelector('.count-badge').textContent = count;
+        btn.classList.toggle('voltage-zero', count === 0);
+    });
+    // Update Dielectric counts
+    const dData = getPreFilteredData(false, 'dielectric');
+    const dCounts = {};
+    dData.forEach(c => dCounts[c['Dielectric Material']] = (dCounts[c['Dielectric Material']] || 0) + 1);
+    document.querySelectorAll('#dielectric-tags .tag-btn').forEach(btn => {
+        const count = dCounts[btn.dataset.dielectric] || 0;
+        btn.querySelector('.count-badge').textContent = count;
+        btn.classList.toggle('voltage-zero', count === 0);
+    });
+
+    // Update Lead Space counts
+    const lData = getPreFilteredData(false, 'lead');
+    const lCounts = {};
+    lData.forEach(c => {
+        const key = String(c['Lead Space P1\n(mm)']);
+        lCounts[key] = (lCounts[key] || 0) + 1;
+    });
+    document.querySelectorAll('#lead-tags .tag-btn').forEach(btn => {
+        const count = lCounts[btn.dataset.lead] || 0;
         btn.querySelector('.count-badge').textContent = count;
         btn.classList.toggle('voltage-zero', count === 0);
     });
@@ -473,7 +550,7 @@ function renderTable() {
         const isSelected = compareList.includes(cap.PartNumber);
         return `<tr class="${isSelected ? 'selected' : ''}">
             <td><input type="checkbox" class="compare-check" data-pn="${cap.PartNumber}" ${isSelected ? 'checked' : ''}></td>
-            <td><div class="pn-container"><a href="${cap.URL || '#'}" target="_blank" class="pn-link"><strong>${cap.PartNumber}</strong></a><button class="copy-btn" data-pn="${cap.PartNumber}">${ICON_COPY}</button></div></td>
+            <td><div class="pn-container"><a href="https://industry.panasonic.eu/productfinder?search=${cap.PartNumber}" target="_blank" class="pn-link"><strong>${cap.PartNumber}</strong></a><button class="copy-btn" data-pn="${cap.PartNumber}">${ICON_COPY}</button></div></td>
             <td>${cap.Type}</td>
             <td>${cap['Rated \nVoltage (V)']}V</td>
             <td>${cap['Voltage type']}</td>
@@ -573,6 +650,11 @@ function updateCompareBar() {
             }
         };
     }
+    if (isKeepMode) {
+        document.getElementById('keepSelection').classList.add('active');
+    } else {
+        document.getElementById('keepSelection').classList.remove('active');
+    }
 }
 
 function resetFilters() {
@@ -623,9 +705,7 @@ function resetFilters() {
     resetSlider('diaMin', 'diaMax', 'diaSliderMin', 'diaSliderMax', 'diaTrack', globalLimits.diaMin, globalLimits.diaMax, false);
     resetSlider('heightMin', 'heightMax', 'heightSliderMin', 'heightSliderMax', 'heightTrack', globalLimits.heightMin, globalLimits.heightMax, false);
     resetSlider('rippleMin', 'rippleMax', 'rippleSliderMin', 'rippleSliderMax', 'rippleTrack', globalLimits.rippleMin, globalLimits.rippleMax, false);
-
-    const wMax = document.getElementById('widthMax');
-    if (wMax) wMax.value = 1000;
+    resetSlider('widthMin', 'widthMax', 'widthSliderMin', 'widthSliderMax', 'widthTrack', globalLimits.widthMin, globalLimits.widthMax, false);
 
     const esrMax = document.getElementById('esrMax');
     if (esrMax) esrMax.value = 10000;
@@ -741,7 +821,14 @@ function setupEventListeners() {
         };
     }
 
-    const inputs = ['pnSearch', 'capMin', 'capMax', 'esrMax', 'rippleMin', 'rippleMax', 'diaMin', 'diaMax', 'heightMin', 'heightMax', 'widthMax'];
+    // Section Header Toggles
+    document.querySelectorAll('.section-header').forEach(header => {
+        header.onclick = () => {
+            header.parentElement.classList.toggle('section-collapsed');
+        };
+    });
+
+    const inputs = ['pnSearch', 'capMin', 'capMax', 'esrMax', 'rippleMin', 'rippleMax', 'diaMin', 'diaMax', 'heightMin', 'heightMax', 'widthMin', 'widthMax'];
     inputs.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.oninput = debounceUpdate;
@@ -796,6 +883,7 @@ function setupEventListeners() {
     setupDual(document.getElementById('diaSliderMin'), document.getElementById('diaSliderMax'), document.getElementById('diaMin'), document.getElementById('diaMax'), document.getElementById('diaTrack'), false);
     setupDual(document.getElementById('heightSliderMin'), document.getElementById('heightSliderMax'), document.getElementById('heightMin'), document.getElementById('heightMax'), document.getElementById('heightTrack'), false);
     setupDual(document.getElementById('rippleSliderMin'), document.getElementById('rippleSliderMax'), document.getElementById('rippleMin'), document.getElementById('rippleMax'), document.getElementById('rippleTrack'), false);
+    setupDual(document.getElementById('widthSliderMin'), document.getElementById('widthSliderMax'), document.getElementById('widthMin'), document.getElementById('widthMax'), document.getElementById('widthTrack'), false);
 
     const showCompare = document.getElementById('showCompare');
     if (showCompare) {
@@ -859,9 +947,10 @@ function setupEventListeners() {
     const openProducts = document.getElementById('openProducts');
     if (openProducts) {
         openProducts.onclick = () => {
+            if (compareList.length === 0) { alert('Please select at least one part.'); return; }
             compareList.forEach(pn => {
-                const cap = capacitorData.find(c => c.PartNumber === pn);
-                if (cap && cap['PN URL']) window.open(cap['PN URL'], '_blank');
+                const url = `https://industry.panasonic.eu/productfinder?search=${pn}`;
+                window.open(url, '_blank');
             });
         };
     }

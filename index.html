@@ -28,6 +28,10 @@
                     <div id="type-tags" class="tag-group"></div>
                 </div>
                 <div class="filter-item">
+                    <label>Dielectric Material</label>
+                    <div id="dielectric-tags" class="tag-group"></div>
+                </div>
+                <div class="filter-item">
                     <label>Voltage Type</label>
                     <div id="vtype-tags" class="tag-group"></div>
                 </div>
@@ -129,7 +133,18 @@
                 </div>
                 <div class="filter-item">
                     <label>Body Width (mm)</label>
-                    <input type="number" id="widthMax" placeholder="Max Width" class="single-input">
+                    <div class="range-container">
+                        <div id="hist-w" class="histogram"></div>
+                        <div class="dual-range">
+                            <div class="slider-track" id="widthTrack"></div>
+                            <input type="range" id="widthSliderMin" min="0" max="100" value="0">
+                            <input type="range" id="widthSliderMax" min="0" max="100" value="100">
+                        </div>
+                    </div>
+                    <div class="range-inputs">
+                        <input type="number" id="widthMin" placeholder="Min" step="0.1">
+                        <input type="number" id="widthMax" placeholder="Max" step="0.1">
+                    </div>
                 </div>
                 <div class="filter-item">
                     <label>Height (mm)</label>
@@ -145,6 +160,10 @@
                         <input type="number" id="heightMin" placeholder="Min" step="0.1">
                         <input type="number" id="heightMax" placeholder="Max" step="0.1">
                     </div>
+                </div>
+                <div class="filter-item">
+                    <label>Lead Space (mm)</label>
+                    <div id="lead-tags" class="tag-group"></div>
                 </div>
             </div>
         </div>

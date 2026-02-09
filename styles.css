@@ -1173,9 +1173,14 @@
         .compare-actions {
             display: flex;
             gap: 8px;
-            align-items: center;
-            justify-content: center;
-            flex-direction: row;
+            flex-wrap: wrap;
+            padding-bottom: 4px;
+        }
+
+        #keepSelection.active {
+            background-color: #22c55e !important;
+            color: white !important;
+            border-color: #16a34a !important;
         }
 
         .compare-btn {

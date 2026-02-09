@@ -299,7 +299,7 @@ function renderHistograms() {
 }
 
 function updateSeriesDropdown() {
-    const preFiltered = getPreFilteredData(false, true);
+    const preFiltered = getPreFilteredData(true);
     const seriesCounts = {};
     preFiltered.forEach(cap => {
         const s = cap.Series || 'Unknown';
@@ -330,7 +330,29 @@ function updateSeriesDropdown() {
     }
 
     const toggleText = document.getElementById('series-toggle-text');
-    if (toggleText) toggleText.textContent = selectedSeries.size === 0 ? 'All Series' : (selectedSeries.size === 1 ? Array.from(selectedSeries)[0] : `${selectedSeries.size} Series Selected`);
+    const seriesMenuClear = document.getElementById('series-menu-clear');
+
+    if (toggleText) {
+        if (selectedSeries.size === 0) {
+            toggleText.textContent = 'All Series';
+            toggleText.style.fontSize = '0.8rem';
+            if (seriesMenuClear) seriesMenuClear.style.display = 'none';
+        } else {
+            if (seriesMenuClear) seriesMenuClear.style.display = 'flex';
+
+            if (selectedSeries.size <= 4) {
+                toggleText.textContent = Array.from(selectedSeries).join(', ');
+                // Dynamic font sizing
+                if (selectedSeries.size === 1) toggleText.style.fontSize = '0.8rem';
+                else if (selectedSeries.size === 2) toggleText.style.fontSize = '0.75rem';
+                else if (selectedSeries.size === 3) toggleText.style.fontSize = '0.7rem';
+                else toggleText.style.fontSize = '0.65rem';
+            } else {
+                toggleText.textContent = `${selectedSeries.size} Series Selected`;
+                toggleText.style.fontSize = '0.8rem';
+            }
+        }
+    }
     const totalCount = document.getElementById('series-total-count');
     if (totalCount) totalCount.textContent = filteredSeries.length;
 }
@@ -364,7 +386,8 @@ function getActiveFilters() {
         widthMin: parseFloat(document.getElementById('widthMin').value) || 0,
         widthMax: parseFloat(document.getElementById('widthMax').value) || 1000,
         automotive: document.querySelector('#auto-filters .tag-btn.active').dataset.value,
-        series: selectedSeries
+        series: selectedSeries,
+        seriesSearch: document.getElementById('series-search').value.toLowerCase()
     };
 }
 
@@ -388,7 +411,13 @@ function getPreFilteredData(skipSeries = false, skipCat = null) {
         if (cap._h < f.heightMin || cap._h > f.heightMax) return false;
         if (cap._w < f.widthMin || cap._w > f.widthMax) return false;
         if (f.automotive !== 'all' && cap['Automotive grade'] !== f.automotive) return false;
-        if (!skipSeries && f.series.size > 0 && !f.series.has(cap.Series)) return false;
+        if (!skipSeries) {
+            if (f.series.size > 0) {
+                if (!f.series.has(cap.Series)) return false;
+            } else if (f.seriesSearch) {
+                if (!cap.Series || !cap.Series.toLowerCase().includes(f.seriesSearch)) return false;
+            }
+        }
         return true;
     });
 }
@@ -873,7 +902,24 @@ function setupEventListeners() {
     }
 
     const seriesSearch = document.getElementById('series-search');
-    if (seriesSearch) seriesSearch.oninput = updateSeriesDropdown;
+    if (seriesSearch) {
+        seriesSearch.oninput = () => {
+            updateSeriesDropdown();
+            debounceUpdate();
+        };
+    }
+
+    const seriesMenuClear = document.getElementById('series-menu-clear');
+    if (seriesMenuClear) {
+        seriesMenuClear.onclick = (e) => {
+            e.stopPropagation();
+            selectedSeries.clear();
+            const sc = document.getElementById('series-search');
+            if (sc) sc.value = '';
+            updateSeriesDropdown();
+            debounceUpdate();
+        };
+    }
 
     const setupDual = (sMin, sMax, iMin, iMax, track, isLog) => {
         if (!sMin || !sMax) return;

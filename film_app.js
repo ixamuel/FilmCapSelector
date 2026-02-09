@@ -393,8 +393,22 @@ function applyFilters() {
     if (currentSort.col) {
         filteredData.sort((a, b) => {
             let va = a[currentSort.col], vb = b[currentSort.col];
-            if (typeof va === 'string') va = va.toLowerCase();
-            if (typeof vb === 'string') vb = vb.toLowerCase();
+
+            // Natural numeric sort for strings and numbers
+            if (va === null || va === undefined || va === '-') return 1;
+            if (vb === null || vb === undefined || vb === '-') return -1;
+
+            const na = parseFloat(va);
+            const nb = parseFloat(vb);
+
+            if (!isNaN(na) && !isNaN(nb)) {
+                return (na - nb) * currentSort.dir;
+            }
+
+            if (typeof va === 'string' && typeof vb === 'string') {
+                return va.localeCompare(vb, undefined, { numeric: true, sensitivity: 'base' }) * currentSort.dir;
+            }
+
             if (va < vb) return -1 * currentSort.dir;
             if (va > vb) return 1 * currentSort.dir;
             return 0;
@@ -448,7 +462,9 @@ function renderTable() {
     let thead = '<thead><tr><th style="width:30px;"><input type="checkbox" id="selectAll"></th>';
     headers.forEach(h => {
         let arrow = currentSort.col === h.l ? (currentSort.dir === 1 ? ' ▲' : ' ▼') : '';
-        thead += `<th onclick="handleHeaderClick('${h.l}')" style="cursor:pointer; user-select:none; white-space:nowrap;">${h.d || h.l}${arrow}</th>`;
+        // Escape newlines in label for the onclick JS handler
+        const escapedLabel = h.l.replace(/\n/g, '\\n');
+        thead += `<th onclick="handleHeaderClick('${escapedLabel}')" style="cursor:pointer; user-select:none; white-space:nowrap;">${h.d || h.l}${arrow}</th>`;
     });
     thead += '</tr></thead>';
 

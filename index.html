@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panasonic Film Capacitor Selection Tool v1.0</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Specific tweaks for Film Capacitor Tool */
+        .filter-section-no-header {
+            margin-top: 0;
+        }
+
+        #temp-tags .tag-btn {
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="appSidebar">
+        <div class="filter-section filter-section-no-header" id="sec-product-status">
+            <div class="section-content">
+                <div class="filter-item">
+                    <label>Type</label>
+                    <div id="type-tags" class="tag-group"></div>
+                </div>
+                <div class="filter-item">
+                    <label>Voltage Type</label>
+                    <div id="vtype-tags" class="tag-group"></div>
+                </div>
+                <div class="filter-item">
+                    <label>Series</label>
+                    <div class="dropdown-container" id="series-dropdown-container">
+                        <button class="dropdown-toggle" id="series-toggle">
+                            <span id="series-toggle-text">All Series</span>
+                            <span class="count-badge" id="series-total-count">0</span>
+                            <span id="series-clear" class="filter-clear-btn" title="Clear Series">&times;</span>
+                            <span class="arrow">▼</span>
+                        </button>
+                        <div class="dropdown-menu" id="series-menu">
+                            <div class="dropdown-search">
+                                <input type="text" id="series-search" placeholder="Search series...">
+                            </div>
+                            <div class="dropdown-list" id="series-list">
+                                <!-- Series items will be injected here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-item">
+                    <label>Voltage (V)</label>
+                    <div id="voltage-tags" class="tag-group"></div>
+                </div>
+                <div class="filter-item">
+                    <label>Automotive Grade</label>
+                    <div class="tag-group" id="auto-filters">
+                        <button class="tag-btn active" data-value="all">All</button>
+                        <button class="tag-btn" data-value="Yes">Yes</button>
+                        <button class="tag-btn" data-value="No">No</button>
+                    </div>
+                </div>
+                <div class="filter-item">
+                    <label>Category Temperature Range (°C)</label>
+                    <div id="temp-tags" class="tag-group"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-section" id="sec-electrical">
+            <div class="section-header">Electrical Specs <span class="arrow">▼</span></div>
+            <div class="section-content">
+                <div class="filter-item">
+                    <label>Capacitance (µF)</label>
+                    <div class="range-container">
+                        <div id="hist-c" class="histogram"></div>
+                        <div class="dual-range">
+                            <div class="slider-track" id="capTrack"></div>
+                            <input type="range" id="capSliderMin" min="0" max="1000" value="0">
+                            <input type="range" id="capSliderMax" min="0" max="1000" value="1000">
+                        </div>
+                    </div>
+                    <div class="range-inputs">
+                        <input type="number" id="capMin" placeholder="Min">
+                        <input type="number" id="capMax" placeholder="Max">
+                    </div>
+                </div>
+                <div class="filter-item">
+                    <label>ESR (mΩ)</label>
+                    <input type="number" id="esrMax" placeholder="Max ESR" class="single-input">
+                </div>
+                <div class="filter-item">
+                    <label>Permissible Current (Arms)</label>
+                    <div class="range-container">
+                        <div id="hist-ripple" class="histogram"></div>
+                        <div class="dual-range">
+                            <div class="slider-track" id="rippleTrack"></div>
+                            <input type="range" id="rippleSliderMin" min="0" max="10000" value="0">
+                            <input type="range" id="rippleSliderMax" min="0" max="10000" value="10000">
+                        </div>
+                    </div>
+                    <div class="range-inputs">
+                        <input type="number" id="rippleMin" placeholder="Min">
+                        <input type="number" id="rippleMax" placeholder="Max">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-section" id="sec-dimensions">
+            <div class="section-header">Dimensions <span class="arrow">▼</span></div>
+            <div class="section-content">
+                <div class="filter-item">
+                    <label>Body Length / Dia (mm)</label>
+                    <div class="range-container">
+                        <div id="hist-dia" class="histogram"></div>
+                        <div class="dual-range">
+                            <div class="slider-track" id="diaTrack"></div>
+                            <input type="range" id="diaSliderMin" min="0" max="100" value="0">
+                            <input type="range" id="diaSliderMax" min="0" max="100" value="100">
+                        </div>
+                    </div>
+                    <div class="range-inputs">
+                        <input type="number" id="diaMin" placeholder="Min" step="0.1">
+                        <input type="number" id="diaMax" placeholder="Max" step="0.1">
+                    </div>
+                </div>
+                <div class="filter-item">
+                    <label>Body Width (mm)</label>
+                    <input type="number" id="widthMax" placeholder="Max Width" class="single-input">
+                </div>
+                <div class="filter-item">
+                    <label>Height (mm)</label>
+                    <div class="range-container">
+                        <div id="hist-h" class="histogram"></div>
+                        <div class="dual-range">
+                            <div class="slider-track" id="heightTrack"></div>
+                            <input type="range" id="heightSliderMin" min="0" max="100" value="0">
+                            <input type="range" id="heightSliderMax" min="0" max="100" value="100">
+                        </div>
+                    </div>
+                    <div class="range-inputs">
+                        <input type="number" id="heightMin" placeholder="Min" step="0.1">
+                        <input type="number" id="heightMax" placeholder="Max" step="0.1">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="clear-btn-wrap">
+            <button class="tag-btn" id="clearAll"
+                style="width: 100%; justify-content: center; background: #fee2e2; color: #991b1b; border-color: #fecaca;">Clear
+                All Filters</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <button class="toggle-sidebar" id="toggleSidebar" aria-label="Toggle Sidebar">☰</button>
+                <div class="search-wrapper">
+                    <input type="text" id="pnSearch" placeholder="Search Part Number...">
+                </div>
+            </div>
+            <div class="top-bar-center">
+                <h1>FilmCapSelector v.1.0</h1>
+                <p>Panasonic Film Capacitor Selection Tool by Sam</p>
+            </div>
+            <div class="top-bar-right">
+                <div id="resultsCount">0 matches</div>
+            </div>
+        </div>
+
+        <div class="results-area">
+            <div id="results-container"></div>
+        </div>
+    </main>
+
+    <div class="compare-bar-wrap" id="compareBarWrap">
+        <div class="selection-list" id="selectionList"></div>
+        <div class="compare-bar" id="compareBar">
+            <div class="compare-bar-top">
+                <span id="compareText" style="font-weight: 600;">Selection (0)</span>
+                <div class="compare-keep-clear">
+                    <button class="compare-btn" id="keepSelection">Keep</button>
+                    <button class="compare-btn" id="clearSelection">Clear</button>
+                </div>
+            </div>
+            <div class="compare-divider"></div>
+            <div class="compare-actions">
+                <button class="compare-btn" id="showCompare">Compare</button>
+                <button class="compare-btn export-btn" id="exportSelection">Export Table</button>
+                <button class="compare-btn" id="openProducts" style="background: #0041C0;">Products</button>
+                <button class="compare-btn" id="openOctopart" style="background: #0ea5e9;">Octopart</button>
+                <button class="compare-btn" id="openMouser" style="background: #003399;">Mouser</button>
+                <button class="compare-btn" id="openFarnell" style="background: #A3AF07;">Farnell</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="compareModal">
+        <div class="modal-content">
+            <div class="modal-header-actions">
+                <div
+                    style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:12px;">
+                    <h2 style="margin:0; font-size: 1.25rem;">Selection Summary</h2>
+                    <span class="close-modal" id="closeModal"
+                        style="font-size:24px; line-height:1; cursor:pointer;">×</span>
+                </div>
+            </div>
+            <div id="compareTableWrapper"></div>
+        </div>
+    </div>
+
+    <script src="film_data.js"></script>
+    <script src="film_app.js"></script>
+</body>
+
+</html>

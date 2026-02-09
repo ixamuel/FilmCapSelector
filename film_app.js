@@ -371,7 +371,7 @@ function updateTagCounts() {
     });
 }
 
-let currentSort = { col: 'PartNumber', dir: 1 };
+let currentSort = { col: null, dir: 1 };
 
 function handleHeaderClick(label) {
     if (currentSort.col === label) currentSort.dir *= -1;
@@ -381,14 +381,16 @@ function handleHeaderClick(label) {
 
 function applyFilters() {
     filteredData = getPreFilteredData();
-    filteredData.sort((a, b) => {
-        let va = a[currentSort.col], vb = b[currentSort.col];
-        if (typeof va === 'string') va = va.toLowerCase();
-        if (typeof vb === 'string') vb = vb.toLowerCase();
-        if (va < vb) return -1 * currentSort.dir;
-        if (va > vb) return 1 * currentSort.dir;
-        return 0;
-    });
+    if (currentSort.col) {
+        filteredData.sort((a, b) => {
+            let va = a[currentSort.col], vb = b[currentSort.col];
+            if (typeof va === 'string') va = va.toLowerCase();
+            if (typeof vb === 'string') vb = vb.toLowerCase();
+            if (va < vb) return -1 * currentSort.dir;
+            if (va > vb) return 1 * currentSort.dir;
+            return 0;
+        });
+    }
     updateSeriesDropdown();
     updateTagCounts();
     calculateDistributions(filteredData);

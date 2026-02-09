@@ -374,8 +374,17 @@ function updateTagCounts() {
 let currentSort = { col: null, dir: 1 };
 
 function handleHeaderClick(label) {
-    if (currentSort.col === label) currentSort.dir *= -1;
-    else { currentSort.col = label; currentSort.dir = 1; }
+    if (currentSort.col !== label) {
+        currentSort.col = label;
+        currentSort.dir = -1; // Standard to Descending
+    } else {
+        if (currentSort.dir === -1) {
+            currentSort.dir = 1; // Descending to Ascending
+        } else {
+            currentSort.col = null; // Ascending to Standard
+            currentSort.dir = 1;
+        }
+    }
     applyFilters();
 }
 

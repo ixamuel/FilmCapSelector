@@ -223,32 +223,40 @@ function handleTagClick(btn, type, container) {
 }
 
 function updateSliderInputs() {
-    const set = (id, val, max) => {
+    const set = (id, val, max, isPlaceholder = false) => {
         const el = document.getElementById(id);
-        if (el) { if (max !== undefined) el.max = max; el.value = val; }
+        if (el) {
+            if (max !== undefined) el.max = max;
+            if (isPlaceholder) {
+                el.placeholder = val;
+                el.value = '';
+            } else {
+                el.value = val;
+            }
+        }
     };
-    set('capMin', globalLimits.capMin);
-    set('capMax', globalLimits.capMax);
-    set('capSliderMin', 0, 1000);
-    set('capSliderMax', 1000, 1000);
+    set('capMin', globalLimits.capMin, undefined, true);
+    set('capMax', globalLimits.capMax, undefined, true);
+    set('capSliderMin', 0, 1000000);
+    set('capSliderMax', 1000000, 1000000);
 
-    set('diaMin', globalLimits.diaMin);
-    set('diaMax', globalLimits.diaMax);
+    set('diaMin', globalLimits.diaMin, undefined, true);
+    set('diaMax', globalLimits.diaMax, undefined, true);
     set('diaSliderMin', globalLimits.diaMin, globalLimits.diaMax);
     set('diaSliderMax', globalLimits.diaMax, globalLimits.diaMax);
 
-    set('heightMin', globalLimits.heightMin);
-    set('heightMax', globalLimits.heightMax);
+    set('heightMin', globalLimits.heightMin, undefined, true);
+    set('heightMax', globalLimits.heightMax, undefined, true);
     set('heightSliderMin', globalLimits.heightMin, globalLimits.heightMax);
     set('heightSliderMax', globalLimits.heightMax, globalLimits.heightMax);
 
-    set('rippleMin', globalLimits.rippleMin);
-    set('rippleMax', globalLimits.rippleMax);
+    set('rippleMin', globalLimits.rippleMin, undefined, true);
+    set('rippleMax', globalLimits.rippleMax, undefined, true);
     set('rippleSliderMin', globalLimits.rippleMin, globalLimits.rippleMax);
     set('rippleSliderMax', globalLimits.rippleMax, globalLimits.rippleMax);
 
-    set('widthMin', globalLimits.widthMin);
-    set('widthMax', globalLimits.widthMax);
+    set('widthMin', globalLimits.widthMin, undefined, true);
+    set('widthMax', globalLimits.widthMax, undefined, true);
     set('widthSliderMin', globalLimits.widthMin, globalLimits.widthMax);
     set('widthSliderMax', globalLimits.widthMax, globalLimits.widthMax);
 }
@@ -689,14 +697,16 @@ function resetFilters() {
 
         if (sMin && sMax) {
             sMin.value = isLog ? 0 : minVal;
-            sMax.value = isLog ? 1000 : maxVal;
+            sMax.value = isLog ? 1000000 : maxVal;
             if (track) {
                 track.style.left = '0%';
                 track.style.width = '100%';
             }
             if (iMin && iMax) {
-                iMin.value = minVal;
-                iMax.value = maxVal;
+                iMin.placeholder = minVal;
+                iMax.placeholder = maxVal;
+                iMin.value = '';
+                iMax.value = '';
             }
         }
     };
@@ -857,7 +867,7 @@ function setupEventListeners() {
 
     const setupDual = (sMin, sMax, iMin, iMax, track, isLog) => {
         if (!sMin || !sMax) return;
-        const update = () => {
+        const updateFromSliders = () => {
             let vMin = parseFloat(sMin.value), vMax = parseFloat(sMax.value);
             if (vMin > vMax) { sMin.value = vMax; vMin = vMax; }
             const min = parseFloat(sMin.min), max = parseFloat(sMax.max);
@@ -866,17 +876,67 @@ function setupEventListeners() {
                 track.style.left = ((vMin - min) / range * 100) + '%';
                 track.style.width = ((vMax - vMin) / range * 100) + '%';
             }
+
+            const formatPrecision = (num) => {
+                if (num === null || num === undefined) return '';
+                // If it's effectively an integer, don't show decimals
+                if (Math.abs(num - Math.round(num)) < 0.000001) return Math.round(num).toString();
+                // Otherwise show up to 3 decimals, trimming trailing zeros
+                return parseFloat(num.toFixed(3)).toString();
+            };
+
             if (isLog) {
+                const sMaxVal = parseFloat(sMax.max);
                 const lMin = Math.log10(globalLimits.capMin), lMax = Math.log10(globalLimits.capMax);
-                iMin.value = (Math.pow(10, lMin + (vMin / 1000) * (lMax - lMin))).toFixed(3);
-                iMax.value = (Math.pow(10, lMin + (vMax / 1000) * (lMax - lMin))).toFixed(3);
-            } else { iMin.value = vMin; iMax.value = vMax; }
+                const valMin = Math.pow(10, lMin + (vMin / sMaxVal) * (lMax - lMin));
+                const valMax = Math.pow(10, lMin + (vMax / sMaxVal) * (lMax - lMin));
+                if (document.activeElement !== iMin) iMin.value = formatPrecision(valMin);
+                if (document.activeElement !== iMax) iMax.value = formatPrecision(valMax);
+            } else {
+                if (document.activeElement !== iMin) iMin.value = formatPrecision(vMin);
+                if (document.activeElement !== iMax) iMax.value = formatPrecision(vMax);
+            }
             debounceUpdate();
         };
-        sMin.oninput = update; sMax.oninput = update;
-        iMin.oninput = () => { if (isLog) { const l = Math.log10(parseFloat(iMin.value)), lm = Math.log10(globalLimits.capMin), lmx = Math.log10(globalLimits.capMax); sMin.value = (l - lm) / (lmx - lm) * 1000; } else sMin.value = iMin.value; update(); };
-        iMax.oninput = () => { if (isLog) { const l = Math.log10(parseFloat(iMax.value)), lm = Math.log10(globalLimits.capMin), lmx = Math.log10(globalLimits.capMax); sMax.value = (l - lm) / (lmx - lm) * 1000; } else sMax.value = iMax.value; update(); };
-        update();
+
+        const updateFromInputs = () => {
+            let iMinVal = parseFloat(iMin.value), iMaxVal = parseFloat(iMax.value);
+            if (isNaN(iMinVal)) iMinVal = isLog ? globalLimits.capMin : parseFloat(sMin.min);
+            if (isNaN(iMaxVal)) iMaxVal = isLog ? globalLimits.capMax : parseFloat(sMax.max);
+
+            if (isLog) {
+                const sMaxVal = parseFloat(sMax.max);
+                const lm = Math.log10(globalLimits.capMin), lmx = Math.log10(globalLimits.capMax);
+                const lMin = Math.log10(Math.max(iMinVal, globalLimits.capMin));
+                const lMax = Math.log10(Math.max(iMaxVal, globalLimits.capMin));
+                sMin.value = (lMin - lm) / (lmx - lm) * sMaxVal;
+                sMax.value = (lMax - lm) / (lmx - lm) * sMaxVal;
+            } else {
+                sMin.value = iMinVal;
+                sMax.value = iMaxVal;
+            }
+
+            // Update track UI without overwriting inputs
+            let vMin = parseFloat(sMin.value), vMax = parseFloat(sMax.value);
+            const min = parseFloat(sMin.min), max = parseFloat(sMax.max);
+            const range = max - min;
+            if (range > 0 && track) {
+                track.style.left = ((vMin - min) / range * 100) + '%';
+                track.style.width = ((vMax - vMin) / range * 100) + '%';
+            }
+            debounceUpdate();
+        };
+
+        sMin.oninput = updateFromSliders;
+        sMax.oninput = updateFromSliders;
+        iMin.oninput = updateFromInputs;
+        iMax.oninput = updateFromInputs;
+
+        // Initialize display
+        updateFromSliders();
+        // But clear the values initially to show placeholders if they match limits
+        if (iMin.value == globalLimits.capMin || iMin.value == sMin.min) iMin.value = '';
+        if (iMax.value == globalLimits.capMax || iMax.value == sMax.max) iMax.value = '';
     };
 
     setupDual(document.getElementById('capSliderMin'), document.getElementById('capSliderMax'), document.getElementById('capMin'), document.getElementById('capMax'), document.getElementById('capTrack'), true);

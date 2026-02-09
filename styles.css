@@ -11,6 +11,12 @@
             --sidebar-w: 300px;
         }
 
+        ::placeholder {
+            color: var(--text-muted);
+            opacity: 0.6;
+            font-weight: 400;
+        }
+
         .sidebar.collapsed {
             --sidebar-w: 0px;
         }

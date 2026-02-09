@@ -4,7 +4,7 @@ import os
 import re
 
 # Configuration
-EXCEL_PATH = '../Film All Data PQ.xlsx'
+EXCEL_PATH = 'Film All Data PQ.xlsx'
 OUTPUT_JS_PATH = 'film_data.js'
 HEADER_ROW = 0  # Headers are on the first row in the sample I saw
 DATA_START_ROW = 1 
@@ -26,16 +26,23 @@ def process_data():
     # Standardize column names based on the sample we extracted
     headers = df.columns.tolist()
     
-    # helper for dimension parsing (handles "31,5" -> 31.5)
-    def clean_numeric(val):
+    # helper for dimension parsing (handles "31,5" -> 31.5 and "315" -> 31.5)
+    def clean_numeric(val, scale=False):
         if pd.isna(val) or val == "" or val == "-": return None
-        if isinstance(val, (int, float)): return val
+        if isinstance(val, (int, float)): 
+            # Typos: 315mm instead of 31.5mm - ONLY if it's a dimension column
+            if scale and val > 100:
+                return val / 10
+            return val
         if isinstance(val, str):
             # Replace comma with dot and remove non-numeric chars except dot/minus
             v = val.replace(',', '.')
             v = "".join(c for c in v if c.isdigit() or c in '.-')
             try:
-                return float(v)
+                num = float(v)
+                if scale and num > 100:
+                    return num / 10
+                return num
             except:
                 return val # Return original string if conversion fails
         return val
@@ -49,9 +56,15 @@ def process_data():
     for col in cols_to_ffill:
         if col in df.columns:
             df[col] = df[col].ffill()
-            if col in ["Rated \nVoltage (V)", "Capacitance\n(uF)", "Body length / dia\n(mm)", 
-                      "Body width\n(mm)", "Height\n(mm)", "Lead Space P1\n(mm)", "ESR (mΩ)"]:
-                df[col] = df[col].apply(clean_numeric)
+            
+    # Apply cleaning to all numeric/dimension columns
+    columns_to_clean = ["Rated \nVoltage (V)", "Capacitance\n(uF)", "Body length / dia\n(mm)", 
+                        "Body width\n(mm)", "Height\n(mm)", "Lead Space P1\n(mm)", "ESR (mΩ)"]
+    for col in columns_to_clean:
+        if col in df.columns:
+            # ONLY scale dimensions (columns containing "mm")
+            should_scale = "(mm)" in col
+            df[col] = df[col].apply(lambda x: clean_numeric(x, scale=should_scale))
 
     print(f"Mapped {len(headers)} columns.")
     

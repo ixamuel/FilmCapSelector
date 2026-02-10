@@ -872,9 +872,42 @@ function setupEventListeners() {
 
     // Section Header Toggles
     document.querySelectorAll('.section-header').forEach(header => {
-        header.onclick = () => {
+        header.onclick = (e) => {
+            // Prevent toggle if clicking the info button
+            if (e.target.closest('.dim-info-btn')) return;
             header.parentElement.classList.toggle('section-collapsed');
         };
+    });
+
+    // Dimension Info Popup Logic
+    const dimInfoBtn = document.getElementById('dimInfoBtn');
+    const dimPopup = document.getElementById('dimInfoPopup');
+    const closeDimPopup = document.getElementById('closeDimPopup');
+
+    if (dimInfoBtn && dimPopup) {
+        dimInfoBtn.onclick = (e) => {
+            e.stopPropagation();
+            const isVisible = dimPopup.classList.toggle('visible');
+            dimInfoBtn.classList.toggle('active', isVisible);
+        };
+    }
+
+    if (closeDimPopup && dimPopup) {
+        closeDimPopup.onclick = (e) => {
+            e.stopPropagation();
+            dimPopup.classList.remove('visible');
+            if (dimInfoBtn) dimInfoBtn.classList.remove('active');
+        };
+    }
+
+    // Close popup on outside click
+    document.addEventListener('click', (e) => {
+        if (dimPopup && dimPopup.classList.contains('visible')) {
+            if (!dimPopup.contains(e.target) && !dimInfoBtn.contains(e.target)) {
+                dimPopup.classList.remove('visible');
+                dimInfoBtn.classList.remove('active');
+            }
+        }
     });
 
     const inputs = ['pnSearch', 'capMin', 'capMax', 'esrMax', 'rippleMin', 'rippleMax', 'diaMin', 'diaMax', 'heightMin', 'heightMax', 'widthMin', 'widthMax'];

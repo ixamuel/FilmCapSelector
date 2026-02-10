@@ -907,15 +907,8 @@ function setupEventListeners() {
         };
     }
 
-    // Close popup on outside click
-    document.addEventListener('click', (e) => {
-        if (dimPopup && dimPopup.classList.contains('visible')) {
-            if (!dimPopup.contains(e.target) && !dimInfoBtn.contains(e.target)) {
-                dimPopup.classList.remove('visible');
-                dimInfoBtn.classList.remove('active');
-            }
-        }
-    });
+
+
 
     const inputs = ['pnSearch', 'capMin', 'capMax', 'esrMax', 'rippleMin', 'rippleMax', 'diaMin', 'diaMax', 'heightMin', 'heightMax', 'widthMin', 'widthMax'];
     inputs.forEach(id => {

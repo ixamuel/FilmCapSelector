@@ -864,9 +864,16 @@ function setupEventListeners() {
     if (overlay) {
         overlay.onclick = () => {
             const sidebar = document.getElementById('appSidebar');
-            if (sidebar) sidebar.classList.remove('active');
-            overlay.classList.remove('active');
-            document.body.style.overflow = '';
+            if (sidebar) {
+                // On desktop, toggle collapsed class; on mobile, remove active class
+                if (window.innerWidth > 768) {
+                    sidebar.classList.add('collapsed');
+                } else {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
         };
     }
 

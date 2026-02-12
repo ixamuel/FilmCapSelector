@@ -181,28 +181,28 @@ function initializeData() {
     // Range Initialization
     const caps = capacitorData.map(c => c._c).filter(v => !isNaN(v));
     globalLimits.capMax = Math.max(...caps) || 2000;
-    globalLimits.capMin = Math.min(...caps) || 0.001;
-    distributions._c.min = globalLimits.capMin;
+    globalLimits.capMin = 0; // Hardcoded to 0
+    distributions._c.min = Math.min(...caps) || 0.001; // Keep distribution min based on data for log scale
     distributions._c.max = globalLimits.capMax;
 
     const dias = capacitorData.map(c => c._dia).filter(v => !isNaN(v));
     globalLimits.diaMax = Math.max(...dias) || 100;
-    globalLimits.diaMin = Math.min(...dias) || 0;
+    globalLimits.diaMin = 0; // Hardcoded to 0
     distributions._dia.max = globalLimits.diaMax;
 
     const heights = capacitorData.map(c => c._h).filter(v => !isNaN(v));
     globalLimits.heightMax = Math.max(...heights) || 100;
-    globalLimits.heightMin = Math.min(...heights) || 0;
+    globalLimits.heightMin = 0; // Hardcoded to 0
     distributions._h.max = globalLimits.heightMax;
 
     const ripples = capacitorData.map(c => c._ripple).filter(v => !isNaN(v));
     globalLimits.rippleMax = Math.max(...ripples) || 100;
-    globalLimits.rippleMin = Math.min(...ripples) || 0;
+    globalLimits.rippleMin = 0; // Hardcoded to 0
     distributions._ripple.max = globalLimits.rippleMax;
 
     const widths = capacitorData.map(c => c._w).filter(v => !isNaN(v));
     globalLimits.widthMax = Math.max(...widths) || 100;
-    globalLimits.widthMin = Math.min(...widths) || 0;
+    globalLimits.widthMin = 0; // Hardcoded to 0
     distributions._w.max = globalLimits.widthMax;
 
     updateSliderInputs();

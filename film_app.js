@@ -180,9 +180,10 @@ function initializeData() {
 
     // Range Initialization
     const caps = capacitorData.map(c => c._c).filter(v => !isNaN(v));
+    const dataCapMin = Math.min(...caps) || 0.001;
     globalLimits.capMax = Math.max(...caps) || 2000;
-    globalLimits.capMin = 0; // Hardcoded to 0
-    distributions._c.min = Math.min(...caps) || 0.001; // Keep distribution min based on data for log scale
+    globalLimits.capMin = dataCapMin;
+    distributions._c.min = dataCapMin;
     distributions._c.max = globalLimits.capMax;
 
     const dias = capacitorData.map(c => c._dia).filter(v => !isNaN(v));

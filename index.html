@@ -267,6 +267,7 @@
                 <button class="compare-btn" id="openOctopart" style="background: #0ea5e9;">Octopart</button>
                 <button class="compare-btn" id="openMouser" style="background: #003399;">Mouser</button>
                 <button class="compare-btn" id="openFarnell" style="background: #A3AF07;">Farnell</button>
+                <button class="compare-btn" id="stockCheckButton" style="background: #0a7a3f;" disabled>Stock Check</button>
             </div>
         </div>
     </div>
@@ -282,6 +283,25 @@
                 </div>
             </div>
             <div id="compareTableWrapper"></div>
+        </div>
+    </div>
+
+    <div class="modal stock-modal" id="stockModal">
+        <div class="modal-content stock-modal-dialog">
+            <div class="stock-modal-head">
+                <h2 style="margin:0; font-size: 1.15rem;">Distributor stock</h2>
+                <div class="stock-modal-controls">
+                    <select id="stockRegion" class="stock-select">
+                        <option value="Europe" selected>Europe</option>
+                        <option value="North America">North America</option>
+                        <option value="Asia">Asia</option>
+                    </select>
+                    <button class="compare-btn" id="stockRefresh">Refresh</button>
+                    <span class="close-modal" id="stockClose" style="font-size:24px; line-height:1; cursor:pointer;">&times;</span>
+                </div>
+            </div>
+            <div id="stockModalMeta" class="stock-modal-meta"></div>
+            <div id="stockModalBody" class="stock-modal-body"></div>
         </div>
     </div>
 

@@ -1581,3 +1581,119 @@
                 max-width: 320px;
             }
         }
+
+        /* ===== Distributor stock check ===== */
+        .compare-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .stock-modal {
+            /* Above the compare bar (z-index 1000) */
+            z-index: 1100;
+        }
+
+        .stock-modal-dialog {
+            width: 90vw;
+            max-width: 1200px;
+        }
+
+        .stock-modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .stock-modal-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stock-select {
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-weight: 600;
+            background: white;
+            color: var(--text-main);
+        }
+
+        .stock-modal-meta {
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+
+        .stock-modal-body {
+            overflow: auto;
+            flex-grow: 1;
+        }
+
+        .stock-meta {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .stock-matrix-scroll {
+            overflow-x: auto;
+        }
+
+        .stock-table.stock-matrix {
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.78rem;
+        }
+
+        .stock-table.stock-matrix th,
+        .stock-table.stock-matrix td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .stock-table.stock-matrix thead th {
+            background: #f8fafc;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            font-weight: 700;
+        }
+
+        .stock-table.stock-matrix .stock-pn-col {
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .stock-table.stock-matrix thead th.stock-col-farnell {
+            background: rgba(16, 150, 80, 0.1);
+            color: #0a7a3f;
+        }
+
+        .stock-table.stock-matrix td.stock-total {
+            font-weight: 700;
+        }
+
+        .stock-dash {
+            color: #94a3b8;
+        }
+
+        .stock-empty,
+        .stock-loading,
+        .stock-error {
+            padding: 12px;
+            font-size: 0.85rem;
+        }
+
+        .stock-error {
+            color: #b91c1c;
+        }
